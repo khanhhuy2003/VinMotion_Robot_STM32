@@ -1,0 +1,12 @@
+../Drivers/CMSIS/Include/core_cm7.h:2156:34:__NVIC_SystemReset	4	static,ignoring_inline_asm
+../Core/Src/main.c:58:19:LAN8720_ReadPHY	24	static
+../Core/Src/main.c:66:19:LAN8720_WritePHY	16	static
+../Core/Src/main.c:71:6:PHY_CheckStatus	16	static
+../Core/Src/main.c:116:6:Left_Arm	16	static
+../Core/Src/main.c:166:5:main	16	static,ignoring_inline_asm
+../Core/Src/main.c:333:6:SystemClock_Config	120	static
+../Core/Src/main.c:409:6:HAL_FDCAN_RxFifo0Callback	136	static
+../Core/Src/main.c:471:6:HAL_FDCAN_RxFifo1Callback	128	static
+../Core/Src/main.c:565:6:MPU_Config	24	static
+../Core/Src/main.c:624:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/main.c:642:6:Error_Handler	4	static,ignoring_inline_asm

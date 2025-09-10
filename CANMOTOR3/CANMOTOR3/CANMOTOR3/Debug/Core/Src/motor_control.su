@@ -1,0 +1,14 @@
+../Core/Src/motor_control.c:35:10:encode_can_id	16	static
+../Core/Src/motor_control.c:40:5:float_to_uint	32	static
+../Core/Src/motor_control.c:50:7:uint_to_float	32	static
+../Core/Src/motor_control.c:54:6:CAN_Transmit_1	8	static
+../Core/Src/motor_control.c:62:6:CAN_Transmit_2	8	static
+../Core/Src/motor_control.c:70:6:CAN_Transmit_3	8	static
+../Core/Src/motor_control.c:80:6:EnableMotorX	32	static
+../Core/Src/motor_control.c:109:6:EnableAllMotor	24	static
+../Core/Src/motor_control.c:120:6:DisableMotorX	32	static
+../Core/Src/motor_control.c:145:6:DisableAllMotor	24	static
+../Core/Src/motor_control.c:156:6:MotorReceiveCommand	56	static
+../Core/Src/motor_control.c:193:6:TestMotorReceiveCommand	56	static
+../Core/Src/motor_control.c:222:6:MotorResponse	32	static
+../Core/Src/motor_control.c:234:9:decode_can_id	24	static
