@@ -165,7 +165,21 @@ typedef struct {
 	uint32_t mode :5;					//bit 28 ~ bit 24
 	uint32_t reserved :3;
 } CanId;
-
+typedef struct {
+	float torque;
+	float position;
+	float speed;
+	float kp;
+	float kd;
+}MotorInfo;
+typedef struct{
+	MotorInfo motor[11];
+	uint32_t crc;
+}MotorReceive; //From NUC to STM32
+typedef struct{
+	uint32_t last_rcv;
+	uint8_t is_connected;
+}MotorStatus;
 typedef struct {
 	float q;
 	float dq;
@@ -173,11 +187,22 @@ typedef struct {
 	float temprature;
 	uint32_t error_code;
 	uint32_t operation_mode;
-} MotorInfo;
-typedef struct{
+} MotorFeedback; //From only motors to STM32 to NUC
+typedef struct {
+    float T_MIN;
+    float T_MAX;
+    float V_MIN;
+    float V_MAX;
+    float KP_MIN;
+    float KP_MAX;
+    float KD_MIN;
+    float KD_MAX;
+} MotorConfig;
 
-int mode;
-} Motor_Receive;
+extern MotorConfig motor2_cfg;
+extern MotorConfig motor3_cfg;
+extern MotorConfig motor4_cfg;
+
 /*
  * Function prototype
  */
@@ -186,7 +211,7 @@ void EnableAllMotor();
 void DisableMotorX(uint16_t motor_can_id, uint8_t bus);
 void DisableAllMotor();
 void MotorReceiveCommand(uint16_t motor_id, float torque, float position, float speed,
-		float kp, float kd, int canbus);
+		float kp, float kd, int canbus, const MotorConfig *cfg);
 void MotorResponse(uint8_t RxData[8], int motor_can_id);
 uint8_t decode_can_id(uint32_t can_id);
 #endif /* INC_MOTOR_CONTROL_H_ */

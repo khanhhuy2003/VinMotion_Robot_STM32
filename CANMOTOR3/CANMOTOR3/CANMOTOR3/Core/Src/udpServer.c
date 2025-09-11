@@ -22,7 +22,8 @@ ip_addr_t udpClientAddr;
 u16_t udpClientPort;
 
 uint32_t last_time_rx_udp = 0;
-char RxUDP[300];
+extern uint8_t RxUDP[300];
+extern uint32_t last_time_rcv_udp;
 //extern LowCmdPacket lowCmdPacket;
 
 extern bool g_receive_udp;
@@ -68,28 +69,23 @@ void udp_receive_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p,
 		const ip_addr_t *addr, u16_t port) {
 
 	if (p != NULL) {
+		last_time_rcv_udp = HAL_GetTick();
 		udp_count++;
 		memcpy(RxUDP, p->payload, p->len);
 		RxUDP[p->len] = '\0';
 		pbuf_free(p);
-        struct pbuf *tx_buf;
-        const char *reply_msg = "ACK from STM32";
-
-        tx_buf = pbuf_alloc(PBUF_TRANSPORT, strlen(reply_msg), PBUF_RAM);
-        if (tx_buf != NULL) {
-            pbuf_take(tx_buf, reply_msg, strlen(reply_msg));
-            udp_sendto(upcb, tx_buf, addr, port); // gửi lại đúng địa chỉ và port của client
-            pbuf_free(tx_buf);
-        }
-
-        pbuf_free(p);
-
-
-//		last_time_rx_udp = HAL_GetTick();
+//        struct pbuf *tx_buf;
+//        const char *reply_msg = "ACK from STM32";
 //
-//		g_receive_udp = true;
-//		rc++;
-		//memcpy(&lowCmdPacket, RxUDP, sizeof(LowCmdPacket));
+//        tx_buf = pbuf_alloc(PBUF_TRANSPORT, strlen(reply_msg), PBUF_RAM);
+//        if (tx_buf != NULL) {
+//            pbuf_take(tx_buf, reply_msg, strlen(reply_msg));
+//            udp_sendto(upcb, tx_buf, addr, port); // gửi lại đúng địa chỉ và port của client
+//            pbuf_free(tx_buf);
+//        }
+//
+//        pbuf_free(p);
+
 	}
 
 }

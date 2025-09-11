@@ -18,11 +18,16 @@ extern uint8_t RxData[8];
 
 extern FDCAN_TxHeaderTypeDef TxHeader;
 extern FDCAN_RxHeaderTypeDef RxHeader;
- float AngleCurrent[23];
- float SpeedCurrent[23];
- float TorqueCurrent[23];
- float TempCurrent[23];
-
+float AngleCurrent[23];
+float SpeedCurrent[23];
+float TorqueCurrent[23];
+float TempCurrent[23];
+MotorConfig motor2_cfg = {T_MIN_02, T_MAX_02, V_MIN_02, V_MAX_02, KP_MIN_02, KP_MAX_02, KD_MIN_02, KD_MAX_02};
+MotorConfig motor3_cfg = {T_MIN_03, T_MAX_03, V_MIN_03, V_MAX_03, KP_MIN_03, KP_MAX_03, KD_MIN_03, KD_MAX_03};
+MotorConfig motor4_cfg = {T_MIN_04, T_MAX_04, V_MIN_04, V_MAX_04, KP_MIN_04, KP_MAX_04, KD_MIN_04, KD_MAX_04};
+//MotorConfig motor2_cfg ;
+//MotorConfig motor3_cfg ;
+//MotorConfig motor4_cfg ;
 /*
  * Helper_function
  */
@@ -108,13 +113,13 @@ void EnableMotorX(uint16_t motor_can_id, uint8_t bus){
  */
 void EnableAllMotor(){
     for (int i = 0; i < can1_count; i++) {
-    	EnableMotorX(can1_ids_bus, CANBUS_1);
+    	EnableMotorX(can1_ids_bus[i], CANBUS_1);
     }
     for (int i = 0; i < can2_count; i++) {
-    	EnableMotorX(can2_ids_bus, CANBUS_2);
+    	EnableMotorX(can2_ids_bus[i], CANBUS_2);
     }
     for (int i = 0; i < can3_count; i++) {
-    	EnableMotorX(can3_ids_bus, CANBUS_3);
+    	EnableMotorX(can3_ids_bus[i], CANBUS_3);
     }
 }
 void DisableMotorX(uint16_t motor_can_id, uint8_t bus){
@@ -144,36 +149,72 @@ void DisableMotorX(uint16_t motor_can_id, uint8_t bus){
 }
 void DisableAllMotor(){
     for (int i = 0; i < can1_count; i++) {
-    	DisableMotorX(can1_ids_bus, CANBUS_1);
+    	DisableMotorX(can1_ids_bus[i], CANBUS_1);
     }
     for (int i = 0; i < can2_count; i++) {
-    	DisableMotorX(can2_ids_bus, CANBUS_2);
+    	DisableMotorX(can2_ids_bus[i], CANBUS_2);
     }
     for (int i = 0; i < can3_count; i++) {
-    	DisableMotorX(can3_ids_bus, CANBUS_3);
+    	DisableMotorX(can3_ids_bus[i], CANBUS_3);
     }
 }
+//void MotorReceiveCommand(uint16_t motor_id, float torque, float position, float speed,
+//		float kp, float kd, int canbus){
+//	CanId canid;
+//	canid.mode = 1;
+//	canid.data = float_to_uint(torque, T_MIN_03, T_MAX_03, 16);
+//	canid.reserved = 0;
+//	canid.targetMotorCanId = motor_id;
+//
+//	uint16_t p = float_to_uint(position, P_MIN, P_MAX, 16);
+//	uint16_t s = float_to_uint(speed, V_MIN_03, V_MIN_03, 16);
+//    uint16_t kp_temp = float_to_uint(kp, KP_MIN_03, KP_MAX_03, 16);
+//    uint16_t kd_temp = float_to_uint(kd, KD_MIN_03, KD_MAX_03, 16);
+//	TxData[0] = (p >> 8) & 0xFF;
+//	TxData[1] = p & 0xFF;
+//	TxData[2] = (s >> 8) & 0xFF;
+//	TxData[3] = s & 0xFF;
+//	TxData[4] = (kp_temp >> 8) & 0xFF;
+//	TxData[5] = kp_temp & 0xFF;
+//	TxData[6] = (kd_temp >> 8) & 0xFF;
+//	TxData[7] = kd_temp & 0xFF;
+//
+//	uint32_t fullcanid = encode_can_id(canid);
+//	TxHeader.Identifier = fullcanid;
+//
+//	if(canbus == CANBUS_1){
+//		CAN_Transmit_1();
+//
+//	}
+//	if(canbus == CANBUS_2){
+//		CAN_Transmit_2();
+//
+//	}
+//	if(canbus == CANBUS_3){
+//		CAN_Transmit_3();
+//	}
+//
+//}
 void MotorReceiveCommand(uint16_t motor_id, float torque, float position, float speed,
-		float kp, float kd, int canbus){
+		float kp, float kd, int canbus, const MotorConfig *cfg){
 	CanId canid;
 	canid.mode = 1;
-	canid.data = float_to_uint(torque, T_MIN_03, T_MAX_03, 16);
+	canid.data = float_to_uint(torque, cfg->T_MIN, cfg->T_MAX, 16);
 	canid.reserved = 0;
 	canid.targetMotorCanId = motor_id;
 
-	uint16_t p = float_to_uint(position, P_MIN, P_MAX, 16);
-	uint16_t s = float_to_uint(speed, V_MIN_03, V_MIN_03, 16);
-    uint16_t kp_temp = float_to_uint(kp, KP_MIN_03, KP_MAX_03, 16);
-    uint16_t kd_temp = float_to_uint(kd, KD_MIN_03, KD_MAX_03, 16);
-	TxData[0] = (p >> 8) & 0xFF;
-	TxData[1] = p & 0xFF;
-	TxData[2] = (s >> 8) & 0xFF;
-	TxData[3] = s & 0xFF;
-	TxData[4] = (kp_temp >> 8) & 0xFF;
-	TxData[5] = kp_temp & 0xFF;
-	TxData[6] = (kd_temp >> 8) & 0xFF;
-	TxData[7] = kd_temp & 0xFF;
-
+    uint16_t p  = float_to_uint(position, P_MIN, P_MAX, 16);
+    uint16_t v  = float_to_uint(speed, cfg->V_MIN, cfg->V_MAX, 16);
+    uint16_t Kp = float_to_uint(kp, cfg->KP_MIN, cfg->KP_MAX, 16);
+    uint16_t Kd = float_to_uint(kd, cfg->KD_MIN, cfg->KD_MAX, 16);
+    TxData[0] = (p >> 8) & 0xFF;
+    TxData[1] = p & 0xFF;
+    TxData[2] = (v >> 8) & 0xFF;
+    TxData[3] = v & 0xFF;
+    TxData[4] = (Kp >> 8) & 0xFF;
+    TxData[5] = Kp & 0xFF;
+    TxData[6] = (Kd >> 8) & 0xFF;
+    TxData[7] = Kd & 0xFF;
 	uint32_t fullcanid = encode_can_id(canid);
 	TxHeader.Identifier = fullcanid;
 

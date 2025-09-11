@@ -78,8 +78,6 @@ void MX_FDCAN1_Init(void)
   sFilterConfig.FilterIndex = 0;
   sFilterConfig.FilterType = FDCAN_FILTER_MASK;
   sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-
-  // Để cho phép tất cả ID -> Mask = 0x00000000
   sFilterConfig.FilterID1 = 0x00000000; // ID không quan trọng
   sFilterConfig.FilterID2 = 0x00000000; // Mask = 0 -> bỏ qua tất cả bit
   sFilterConfig.RxBufferIndex = 0;
@@ -135,6 +133,19 @@ void MX_FDCAN2_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN FDCAN2_Init 2 */
+  FDCAN_FilterTypeDef sFilterConfig;
+
+  sFilterConfig.IdType = FDCAN_EXTENDED_ID; // Nếu bạn dùng extended ID
+  sFilterConfig.FilterIndex = 0;
+  sFilterConfig.FilterType = FDCAN_FILTER_MASK;
+  sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO1;
+  sFilterConfig.FilterID1 = 0x00000000; // ID không quan trọng
+  sFilterConfig.FilterID2 = 0x00000000; // Mask = 0 -> bỏ qua tất cả bit
+  sFilterConfig.RxBufferIndex = 0;
+
+  if (HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig) != HAL_OK) {
+      Error_Handler();
+  }
 
   /* USER CODE END FDCAN2_Init 2 */
 

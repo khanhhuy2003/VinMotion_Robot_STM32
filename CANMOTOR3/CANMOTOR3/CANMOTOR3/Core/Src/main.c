@@ -36,19 +36,40 @@
 extern int udp_count;
 
 volatile uint8_t uart_flag = 0;
- uint8_t TxData[8];
- uint8_t RxData[8];
- FDCAN_TxHeaderTypeDef TxHeader;
- FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t TxData[8];
+uint8_t RxData[8];
+FDCAN_TxHeaderTypeDef TxHeader;
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t RxUDP[300];
 #define POLYNOMIAL 0x04C11DB7
 #define INITIAL_CRC 0xFFFFFFFF
+MotorReceive MotorRcv;
+uint32_t last_time_rcv_udp;
+uint32_t udp_timeout_count = 0;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 FDCAN_TxHeaderTypeDef TxHeader;
-
 FDCAN_RxHeaderTypeDef RxHeader;
+typedef struct {
+    uint16_t motor_id;
+    int canbus;
+    const MotorConfig *cfg;
+} MotorMap;
+const MotorMap motor_map_upper_body[11] = {
+    {MOTOR_13, CANBUS_2, &motor2_cfg},
+	{MOTOR_14, CANBUS_2, &motor2_cfg},
+	{MOTOR_15, CANBUS_1, &motor2_cfg},
+	{MOTOR_16, CANBUS_1, &motor2_cfg},
+	{MOTOR_17, CANBUS_1, &motor2_cfg},
+	{MOTOR_18, CANBUS_1, &motor2_cfg},
+	{MOTOR_19, CANBUS_1, &motor2_cfg},
+	{MOTOR_20, CANBUS_3, &motor2_cfg},
+	{MOTOR_21, CANBUS_3, &motor2_cfg},
+	{MOTOR_22, CANBUS_3, &motor2_cfg},
+	{MOTOR_23, CANBUS_3, &motor2_cfg}
+};
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -113,21 +134,8 @@ void PHY_CheckStatus(void) {
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-void Left_Arm() {
-	int i = 0;
+void Send_UDP(){
 
-	MotorReceiveCommand(MOTOR_15, 0.0, 0.0, 0.0, 20.0, 3, 1);
-	MotorReceiveCommand(MOTOR_16, 0.0, 0.0, 0.0, 20.0, 3, 1);
-	MotorReceiveCommand(MOTOR_17, 0.0, 0.0, 0.0, 20.0, 3, 1);
-	MotorReceiveCommand(MOTOR_18, 0.0, 0.0, 0.0, 20.0, 3, 1);
-
-	if (i <= 1.15f) {
-		MotorReceiveCommand(0x0E, 0.0, i, 0.0, 20.0, 3.5, 2);
-		i = i + 0.001f;
-		HAL_Delay(1);
-	} else {
-		MotorReceiveCommand(0x0E, 0.0, i, 0.0, 20.0, 3.5, 2);
-	}
 }
 /* USER CODE END PTD */
 
@@ -156,7 +164,7 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+float t_ff = 0;
 /* USER CODE END 0 */
 
 /**
@@ -245,38 +253,13 @@ int main(void)
 
   PHY_CheckStatus();
   udpServer_init();
-   //EnableAllMotor();
-   EnableMotorX(MOTOR_14, 2);
-   EnableMotorX(MOTOR_15, 1);
-   EnableMotorX(MOTOR_16, 1);
-   EnableMotorX(MOTOR_17, 1);
-   EnableMotorX(MOTOR_18, 1);
-   EnableMotorX(MOTOR_20, 3);
-   EnableMotorX(MOTOR_21, 3);
-   EnableMotorX(MOTOR_22, 3);
-   EnableMotorX(MOTOR_23, 3);
-
-//   EnableMotorX(MOTOR_9, 1);
-//   EnableMotorX(MOTOR_1, 1);
-
-
-//  EnableMotorX(0x01, 1);
-
-  //EnableMotorX(0x01, 1);
-
-//  HAL_Delay(2000);
-
-  //MotorReceiveCommand(0x09, 1.0, 0.0, 3.0, 20.0, 3, 1);
-
-
-
-
+  EnableAllMotor();
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  float t_ff = 0;
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -284,44 +267,26 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  ethernetif_input(&gnetif);
 	  sys_check_timeouts();
-	  //Left_Arm();
-	   EnableMotorX(MOTOR_14, 2);
-	   EnableMotorX(MOTOR_15, 1);
-	   EnableMotorX(MOTOR_16, 1);
-	   EnableMotorX(MOTOR_17, 1);
-	   EnableMotorX(MOTOR_18, 1);
-	   EnableMotorX(MOTOR_20, 3);
-	   EnableMotorX(MOTOR_21, 3);
-	   EnableMotorX(MOTOR_22, 3);
-	   EnableMotorX(MOTOR_23, 3);
 
-//	  t_ff = 10 * sin(t_ff);
-////	      MotorReceiveCommand(MOTOR_15, t_ff, 0.0, 0.0, 0.0, 0.0, 1);
-////          HAL_Delay(50);
-//	      MotorReceiveCommand(MOTOR_18, t_ff, 0.0, 0.0, 0.0, 0.0, 1);
-//          HAL_Delay(50);
-//          t_ff = t_ff + 0.1;
-//          if (uart_flag) {
-//              uart_flag = 0;
-//              char msg[100];
-////              int len = sprintf(msg, "A: %.2f\r\n, S: %.2f\r\n, T: %.2f\r\n, Temp: %.2f\r\n",
-////                                AngleCurrent[8], SpeedCurrent[8], TorqueCurrent[8], TempCurrent[8]);
-//              int len = sprintf(msg, "A: %.2f\r\n",
-//                                AngleCurrent[14]);
-//              HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//          }
-//          HAL_Delay(100);
-//	MotorDummy(0x09, 1, 0.0, -35, 0.0, 0.0);
-	  //HAL_Delay(2000);
-	  //MotorReceiveCommand(0x09, 1.0, 0.0, 3.0, 20.0, 3, 1);
-	  //MotorReceiveCommand(0x09, 0.1, 0.5, 3.0, 2.0, 5.0, 1);
+	  uint32_t now = HAL_GetTick();
 
+	  if(now  - last_time_rcv_udp > 10){
+		  udp_timeout_count++;
+	  }
+	  memcpy(&MotorRcv, &RxUDP, sizeof(MotorReceive));
 
-
-
-
-
-	  //DisableMotor(0x00, 0x09);
+	  for (int i = 0; i < 11; i++) {
+		  MotorReceiveCommand(
+			  motor_map_upper_body[i].motor_id,
+			  MotorRcv.motor[i].torque,
+			  MotorRcv.motor[i].position,
+			  MotorRcv.motor[i].speed,
+			  MotorRcv.motor[i].kp,
+			  MotorRcv.motor[i].kd,
+			  motor_map_upper_body[i].canbus,
+			  motor_map_upper_body[i].cfg
+		  );
+	  }
   }
   /* USER CODE END 3 */
 }
@@ -384,28 +349,6 @@ void SystemClock_Config(void)
   }
 }
 
-/* USER CODE BEGIN 4 */
-//void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
-//	if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
-//		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData)
-//				!= HAL_OK) {
-//			/* Reception Error */
-//			Error_Handler();
-//		}
-//		if(hfdcan->Instance == FDCAN1){
-//			    uint8_t canid = decode_can_id(RxHeader.Identifier);
-//			    if(canid == 0x09){
-//			    MotorResponse(RxData, 0x09);
-//				char msg[200];
-//				sprintf(msg, "A: %f, S: %f, T: %f, T: %f", AngleCurrent[8], SpeedCurrent[8], TorqueCurrent[8], TempCurrent[8]);
-//				HAL_UART_Transmit(&huart1, (uint8_t*)msg, 200, HAL_MAX_DELAY);
-//			    }
-//
-//		}
-//		//HAL_Delay(1000);
-//	}
-//
-//}
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
     if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
         while (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) > 0) {
@@ -415,13 +358,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
             if (hfdcan->Instance == FDCAN1) {
                 uint8_t canid = decode_can_id(RxHeader.Identifier);
-                char msg[100];
-                int len = 0;
                 switch(canid){
                 case MOTOR_15:
 					MotorResponse(RxData, MOTOR_15);
-					char msg[100];
-
                 	break;
                 case MOTOR_16:
                     MotorResponse(RxData, MOTOR_16);
@@ -438,12 +377,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             }
             if (hfdcan->Instance == FDCAN3) {
                 uint8_t canid = decode_can_id(RxHeader.Identifier);
-                char msg[100];
-                int len = 0;
                 switch(canid){
                 case MOTOR_20:
 					MotorResponse(RxData, MOTOR_20);
-					char msg[100];
                 	break;
                 case MOTOR_21:
                     MotorResponse(RxData, MOTOR_21);
@@ -463,100 +399,43 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
           		/* Notification Error */
           		Error_Handler();
           	}
-//
+
 
         }
     }
 }
 void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
     if ((RxFifo0ITs & FDCAN_IT_RX_FIFO1_NEW_MESSAGE) != RESET) {
-        while (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) > 0) {
-            if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK) {
+            if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO1, &RxHeader, RxData) != HAL_OK) {
                 Error_Handler();
             }
 
             if (hfdcan->Instance == FDCAN2) {
                 uint8_t canid = decode_can_id(RxHeader.Identifier);
-                char msg[100];
-                int len = 0;
                 switch(canid){
-                case MOTOR_14:
-					MotorResponse(RxData, MOTOR_15);
-					char msg[100];
-					len = sprintf(msg, "A14: %.2f\r\n", AngleCurrent[13]);
-					HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
+                case MOTOR_13:
+					MotorResponse(RxData, MOTOR_13);
                 	break;
-//                case MOTOR_16:
-//                    MotorResponse(RxData, MOTOR_16);
-//                    len = sprintf(msg, "A16: %.2f\r\n", AngleCurrent[15]);
-//                    HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//                	break;
-//                case MOTOR_17:
-//                    MotorResponse(RxData, MOTOR_17);
-//                    len = sprintf(msg, "A17: %.2f\r\n", AngleCurrent[16]);
-//                    HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//                	break;
-//                case MOTOR_18:
-//                    MotorResponse(RxData, MOTOR_18);
-//                    len = sprintf(msg, "A18: %.2f\r\n", AngleCurrent[17]);
-//                    HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//                	break;
+                case MOTOR_14:
+					MotorResponse(RxData, MOTOR_14);
+                	break;
 
-                }
+			    case MOTOR_19:
+					MotorResponse(RxData, MOTOR_19);
+				     break;
 
             }
+            if (HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO1_NEW_MESSAGE,
+          			0) != HAL_OK) {
+          		/* Notification Error */
+          		Error_Handler();
+            }
+            }
 
-        }
     }
 }
 
-//void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
-//    if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
-//        if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK) {
-//            Error_Handler();
-//        }
-//        if (hfdcan->Instance == FDCAN1) {
-//            uint8_t canid = decode_can_id(RxHeader.Identifier);
-//            if (canid == MOTOR_15) {
-//                MotorResponse(RxData, MOTOR_15);
-//                char msg[100];
-//  //              int len = sprintf(msg, "A: %.2f\r\n, S: %.2f\r\n, T: %.2f\r\n, Temp: %.2f\r\n",
-//  //                                AngleCurrent[8], SpeedCurrent[8], TorqueCurrent[8], TempCurrent[8]);
-//                int len = sprintf(msg, "A16: %.2f\r\n",
-//                                  AngleCurrent[14]);
-//                HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//            }
-//            if (canid == MOTOR_16) {
-//                MotorResponse(RxData, MOTOR_16);
-//                char msg[100];
-//  //              int len = sprintf(msg, "A: %.2f\r\n, S: %.2f\r\n, T: %.2f\r\n, Temp: %.2f\r\n",
-//  //                                AngleCurrent[8], SpeedCurrent[8], TorqueCurrent[8], TempCurrent[8]);
-//                int len = sprintf(msg, "A17: %.2f\r\n",
-//                                  AngleCurrent[15]);
-//                HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//            }
-//            if (canid == MOTOR_17) {
-//                MotorResponse(RxData, MOTOR_17);
-//                char msg[100];
-//  //              int len = sprintf(msg, "A: %.2f\r\n, S: %.2f\r\n, T: %.2f\r\n, Temp: %.2f\r\n",
-//  //                                AngleCurrent[8], SpeedCurrent[8], TorqueCurrent[8], TempCurrent[8]);
-//                int len = sprintf(msg, "A18: %.2f\r\n",
-//                                  AngleCurrent[16]);
-//                HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//            }
-//            if (canid == MOTOR_18) {
-//                MotorResponse(RxData, MOTOR_18);
-//                char msg[100];
-//  //              int len = sprintf(msg, "A: %.2f\r\n, S: %.2f\r\n, T: %.2f\r\n, Temp: %.2f\r\n",
-//  //                                AngleCurrent[8], SpeedCurrent[8], TorqueCurrent[8], TempCurrent[8]);
-//                int len = sprintf(msg, "A19: %.2f\r\n",
-//                                  AngleCurrent[17]);
-//                HAL_UART_Transmit(&huart1, (uint8_t*)msg, len, HAL_MAX_DELAY);
-//            }
-//
-//        }
-//    }
-//}
+
 
 /* USER CODE END 4 */
 
